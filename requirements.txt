@@ -1,0 +1,9 @@
+botocore
+boto3
+docutils
+futures
+jmespath
+python-dateutil
+s3transfer
+six
+urllib3

@@ -1,0 +1,57 @@
+---
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  labels:
+    app: acme-compliance-jobs
+    release: k8s
+    type: cron
+  name: acme-compliance-jobs
+  namespace: team-security
+spec:
+  concurrencyPolicy: null
+  failedJobsHistoryLimit: 14
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          annotations:
+            iam.amazonaws.com/role: acme-compliance-auditor
+          labels:
+            release: k8s
+        spec:
+          containers:
+          - env:
+            - name: EMAIL_FROM
+              value: security@example.com
+            - name: SMTP_HOST
+              value: smtp.sendgrid.net
+            - name: SMTP_USER
+              valueFrom:
+                secretKeyRef:
+                  key: smtp-user
+                  name: aws-credential-aging-secrets
+            - name: SMTP_PASS
+              valueFrom:
+                secretKeyRef:
+                  key: smtp-pass
+                  name: aws-credential-aging-secrets
+            image: quay.io/Acme/acme-compliance-jobs:latest
+            name: aws-cred-aging
+          restartPolicy: Never
+  schedule: 0  0 * * *
+  successfulJobsHistoryLimit: 14
+---
+apiVersion: v1
+data:
+  smtp-user: YXBpa2V5
+  smtp-pass: '<change this>'
+kind: Secret
+metadata:
+  labels:
+    app: acme-compliance-jobs
+    release: k8s
+  name: aws-credential-aging-secrets
+  namespace: acme-security
+type: Opaque
+---
